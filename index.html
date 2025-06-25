@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Documentation - Projet Angular + GraphQL</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Documentation Complète</h1>
+            <p class="subtitle">Projet Angular + GraphQL avec Backend Spring Boot</p>
+        </header>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showSection('overview')">📋 Vue d'ensemble</button>
+            <button class="nav-tab" onclick="showSection('backend')">⚙️ Backend</button>
+            <button class="nav-tab" onclick="showSection('frontend')">🎨 Frontend</button>
+        </div>
+
+        <!-- Vue d'ensemble -->
+        <div id="overview" class="content-section active">
+            <h2>📋 Vue d'ensemble du Projet</h2>
+
+            <div class="architecture-diagram">
+                <h3>🏗️ Architecture du Système</h3>
+                <p><strong>Frontend Angular</strong> ↔️ <strong>GraphQL API</strong> ↔️ <strong>Backend Spring
+                        Boot</strong> ↔️ <strong>Base de Données</strong></p>
+            </div>
+
+            <div class="tech-stack">
+                <div class="tech-card">
+                    <div class="tech-icon">🅰️</div>
+                    <h4>Angular 17+</h4>
+                    <p>Framework frontend</p>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon">🔗</div>
+                    <h4>GraphQL</h4>
+                    <p>API Query Language</p>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon">🍃</div>
+                    <h4>Spring Boot</h4>
+                    <p>Backend Java</p>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon">🗄️</div>
+                    <h4>H2 Database</h4>
+                    <p>Base de données</p>
+                </div>
+            </div>
+
+            <div class="info">
+                <strong>💡 Objectif :</strong> Créer une application complète de gestion des personnes avec une API
+                GraphQL moderne et une interface utilisateur responsive.
+            </div>
+            <div class="info">
+                <strong>Developpeur :</strong> El Hadji Abdou DRAME - Djiby FALL
+            </div>
+        </div>
+
+        <!-- Backend -->
+        <div id="backend" class="content-section">
+            <h2>⚙️ Configuration du Backend</h2>
+
+            <h3><span class="step-number">1</span>Créer le projet Spring Boot</h3>
+            <pre><code># Générer le projet sur https://start.spring.io/
+# Dépendances : Spring Web, Spring Data JPA, GraphQL, H2 Driver, Lombok, DevTools, Validation
+</code></pre>
+
+            <h3><span class="step-number">2</span>Configuration application.properties</h3>
+            <pre><code># Base de données
+#Configuration de la base de donnees h2
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+spring.jpa.hibernate.ddl-auto=update
+spring.h2.console.enabled=true
+</code></pre>
+
+            <h3><span class="step-number">3</span>Entité Personne</h3>
+            <pre><code>@Entity
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+public class Personne {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank
+    private String nom;
+
+    @NotBlank
+    private String prenom;
+
+    @Past(message = "La date de naissance doit être dans le passé")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate dateNaissance;
+
+    @NotBlank
+    private String adresse;
+
+    @NotBlank
+    @Pattern(regexp = "^(\\+221|00221)?(7[05678])[0-9]{7}$", message = "Numéro de téléphone invalide")
+    private String telephone;
+}
+</code></pre>
+
+            <h3><span class="step-number">4</span>Repository</h3>
+            <pre><code> @Repository
+public interface PersonneRepository extends JpaRepository<Personne, Long> {
+
+    List<Personne> findByNomContainingIgnoreCase(String nom);
+}</code></pre>
+
+            <h3><span class="step-number">5</span>Service</h3>
+            <pre><code>@Service
+@RequiredArgsConstructor
+public class PersonneService {
+
+    private final PersonneRepository repository;
+    
+    public List<Personne> getAll() {
+        return repository.findAll();
+    }
+
+    public Optional<Personne> getById(Long id) {
+        return repository.findById(id);
+    }
+
+    public Personne save(Personne p) {
+        return repository.save(p);
+    }
+
+    public void delete(Long id) {
+        repository.deleteById(id);
+    }
+
+    public List<Personne> rechercherParNom(String nom) {
+        return repository.findByNomContainingIgnoreCase(nom);
+    }
+
+    public Personne update(Long id, Personne updated) {
+        return repository.findById(id)
+                .map(existing -> {
+                    existing.setNom(updated.getNom());
+                    existing.setPrenom(updated.getPrenom());
+                    existing.setAdresse(updated.getAdresse());
+                    existing.setDateNaissance(updated.getDateNaissance());
+                    existing.setTelephone(updated.getTelephone());
+                    return repository.save(existing);
+                })
+                .orElse(null);
+    }
+}</code></pre>
+
+<h3><span class="step-number">6</span>Les DTOs</h3>
+            <pre><code>@Getter
+@Setter
+public class PersonneInputDTO {
+    private String nom;
+    private String prenom;
+    private LocalDate dateNaissance;
+    private String adresse;
+    private String telephone;
+}
+</code>
+</pre>
+<pre>
+<code>@Getter
+@Setter
+@AllArgsConstructor
+public class PersonneSummaryDTO {
+    private Long id;
+    private String nom;
+    private String prenom;
+    private String telephone;
+    private String adresse;
+}
+</code>
+</pre>
+
+            <h3><span class="step-number">7</span>GraphQL Controller</h3>
+            <pre><code>@Controller
+@RequiredArgsConstructor
+public class PersonneController {
+
+    private final PersonneService service;
+
+    @QueryMapping
+    public List<PersonneSummaryDTO> listerToutesPersonnes() {
+        return service.getAll()
+                .stream()
+                .map(p -> new PersonneSummaryDTO(p.getId(),p.getNom(), p.getPrenom(), p.getTelephone(), p.getAdresse()))
+                .collect(Collectors.toList());
+    }
+
+    @QueryMapping
+    public Personne rechercherPersonneParId(@Argument Long id) {
+        return service.getById(id).orElse(null);
+    }
+
+    @QueryMapping
+    public List<Personne> rechercherPersonnes(@Argument String nom) {
+        return service.rechercherParNom(nom);
+    }
+
+    @MutationMapping
+    public Personne ajouterPersonne(@Argument PersonneInputDTO personne) {
+        Personne p = new Personne();
+        p.setNom(personne.getNom());
+        p.setPrenom(personne.getPrenom());
+        p.setAdresse(personne.getAdresse());
+        p.setTelephone(personne.getTelephone());
+        p.setDateNaissance(personne.getDateNaissance());
+        return service.save(p);
+    }
+
+   @MutationMapping
+public Personne modifierPersonne(@Argument Long id, @Argument PersonneInputDTO personne) {
+    Personne p = new Personne();
+    p.setId(id);
+    p.setNom(personne.getNom());
+    p.setPrenom(personne.getPrenom());
+    p.setAdresse(personne.getAdresse());
+    p.setTelephone(personne.getTelephone());
+    p.setDateNaissance(personne.getDateNaissance());
+    return service.update(id, p);
+}
+
+
+    @MutationMapping
+    public Boolean supprimerPersonne(@Argument Long id) {
+        service.delete(id);
+        return true;
+    }
+}</code></pre>
+
+            <h3><span class="step-number">8</span>Schéma GraphQL (schema.graphqls)</h3>
+            <pre><code>scalar Date
+
+type Personne {
+  id: ID!
+  nom: String!
+  prenom: String!
+  dateNaissance: Date!
+  adresse: String!
+  telephone: String!
+}
+
+type PersonneSummary {
+  id: ID
+  nom: String!
+  prenom: String!
+  telephone: String!
+  adresse: String!
+}
+
+type Query {
+  listerToutesPersonnes: [PersonneSummary!]!
+  rechercherPersonneParId(id: ID!): Personne
+  rechercherPersonnes(nom: String!): [Personne!]!
+}
+
+input PersonneInput {
+  nom: String!
+  prenom: String!
+  dateNaissance: Date!
+  adresse: String!
+  telephone: String!
+}
+
+type Mutation {
+  ajouterPersonne(personne: PersonneInput!): Personne!
+  modifierPersonne(id: ID!, personne: PersonneInput!): Personne!
+  supprimerPersonne(id: ID!): Boolean!
+}
+</code></pre>
+        </div>
+
+        </div>
+
+        <!-- Frontend -->
+        <div id="frontend" class="content-section">
+            <h2>🎨 Configuration du Frontend</h2>
+
+            <h3><span class="step-number">1</span>Créer le projet Angular</h3>
+            <pre><code>ng new personnes-app --routing --style css --standalone false
+cd personnes-app</code></pre>
+
+            <h3><span class="step-number">2</span>Installer les dépendances GraphQL</h3>
+            <pre><code>npm install apollo-angular @apollo/client graphql</code></pre>
+
+            <h3><span class="step-number">3</span>Configurer Apollo Client</h3>
+            <p>Créer <span class="inline-code">src/app/graphql.module.ts</span> :</p>
+            <pre><code>import { NgModule, inject } from '@angular/core';
+import { provideApollo } from 'apollo-angular';
+import { HttpLink } from 'apollo-angular/http';
+import { ApolloClientOptions, InMemoryCache } from '@apollo/client/core';
+
+export function createApollo(): ApolloClientOptions&lt;any&gt; {
+  const uri = 'http://localhost:8080/graphql';
+  const httpLink = inject(HttpLink);
+
+  return {
+    link: httpLink.create({ uri }),
+    cache: new InMemoryCache(),
+    defaultOptions: {
+      watchQuery: {
+        errorPolicy: 'all'
+      }
+    }
+  };
+}
+
+@NgModule({
+  providers: [provideApollo(createApollo)],
+})
+export class GraphQLModule {}</code></pre>
+
+            <h3><span class="step-number">4</span>Modèle Personne</h3>
+            <p>Créer <span class="inline-code">src/app/models/personne.model.ts</span> :</p>
+            <pre><code>export interface Personne {
+  id?: string;
+  nom: string;
+  prenom: string;
+  email?: string;
+  dateNaissance?: string;
+}
+
+export interface PersonneInput {
+  nom: string;
+  prenom: string;
+  email?: string;
+  dateNaissance?: string;
+}</code></pre>
+
+            <h3><span class="step-number">5</span>Service GraphQL</h3>
+            <pre><code>ng generate service core/personne</code></pre>
+            <pre><code>import { Injectable } from '@angular/core';
+import { Apollo, gql } from 'apollo-angular';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { Personne, PersonneInput } from '../models/personne.model';
+
+const LISTER_PERSONNES = gql`
+  query {
+    listerToutesPersonnes {
+      id
+      nom
+      prenom
+      email
+      dateNaissance
+    }
+  }
+`;
+
+const AJOUTER_PERSONNE = gql`
+  mutation ($personne: PersonneInput!) {
+    ajouterPersonne(personne: $personne) {
+      id
+      nom
+      prenom
+      email
+      dateNaissance
+    }
+  }
+`;
+
+const MODIFIER_PERSONNE = gql`
+  mutation ($id: ID!, $personne: PersonneInput!) {
+    modifierPersonne(id: $id, personne: $personne) {
+      id
+      nom
+      prenom
+      email
+      dateNaissance
+    }
+  }
+`;
+
+const SUPPRIMER_PERSONNE = gql`
+  mutation ($id: ID!) {
+    supprimerPersonne(id: $id)
+  }
+`;
+
+@Injectable({
+  providedIn: 'root'
+})
+export class PersonneService {
+
+  constructor(private apollo: Apollo) { }
+
+  lister(): Observable&lt;Personne[]&gt; {
+    return this.apollo.query&lt;{ listerToutesPersonnes: Personne[] }&gt;({
+      query: LISTER_PERSONNES,
+      fetchPolicy: 'cache-and-network'
+    }).pipe(
+      map(result => result.data.listerToutesPersonnes)
+    );
+  }
+
+  ajouter(personne: PersonneInput): Observable&lt;Personne&gt; {
+    return this.apollo.mutate&lt;{ ajouterPersonne: Personne }&gt;({
+      mutation: AJOUTER_PERSONNE,
+      variables: { personne },
+      refetchQueries: [{ query: LISTER_PERSONNES }]
+    }).pipe(
+      map(result => result.data!.ajouterPersonne)
+    );
+  }
+
+  modifier(id: string, personne: PersonneInput): Observable&lt;Personne&gt; {
+    return this.apollo.mutate&lt;{ modifierPersonne: Personne }&gt;({
+      mutation: MODIFIER_PERSONNE,
+      variables: { id, personne },
+      refetchQueries: [{ query: LISTER_PERSONNES }]
+    }).pipe(
+      map(result => result.data!.modifierPersonne)
+    );
+  }
+
+  supprimer(id: string): Observable&lt;boolean&gt; {
+    return this.apollo.mutate&lt;{ supprimerPersonne: boolean }&gt;({
+      mutation: SUPPRIMER_PERSONNE,
+      variables: { id },
+      refetchQueries: [{ query: LISTER_PERSONNES }]
+    }).pipe(
+      map(result => result.data!.supprimerPersonne)
+    );
+  }
+}</code></pre>
+
+            <h3><span class="step-number">6</span>Créer les composants</h3>
+            <pre><code>ng generate component pages/personnes/liste-personnes
+ng generate component pages/personnes/formulaire-personne
+ng generate component shared/navigation</code></pre>
+
+            <div class="success">
+                <strong>✅ Conseil :</strong> Utilisez Angular Material ou Bootstrap pour une interface utilisateur
+                moderne et responsive.
+            </div>
+
+            <h3><span class="step-number">7</span>Configuration du routing</h3>
+            <pre><code>const routes: Routes = [
+  { path: '', redirectTo: '/personnes', pathMatch: 'full' },
+  { path: 'personnes', component: ListePersonnesComponent },
+  { path: 'personnes/nouveau', component: FormulairePersonneComponent },
+  { path: 'personnes/:id/modifier', component: FormulairePersonneComponent },
+  { path: 'documentation', component: DocumentationComponent }
+];</code></pre>
+        </div>
+
+
+        <div class="footer">
+            <p>📚 Documentation créée avec ❤️ | Version 1.0</p>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // Masquer toutes les sections
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => section.classList.remove('active'));
+
+            // Désactiver tous les onglets
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Afficher la section sélectionnée
+            document.getElementById(sectionId).classList.add('active');
+
+            // Activer l'onglet correspondant
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+
+</html>
